@@ -241,7 +241,7 @@ export default function GeneralForm() {
           <p className="mt-4 text-center text-sm text-gray-500">
             View the{' '}
             <a
-              href="https://github.com/donaldasante/scanupload.example.dotnet-and-react"
+              href="https://github.com/donaldasante/scanupload.example.vercel"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-800 underline"
