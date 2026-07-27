@@ -1,14 +1,15 @@
 # ScanUpload Next.js Example
 
-This project is a Next.js example for integrating ScanUpload into a web app.
-It renders the ScanUpload QR code flow in the browser and uses server-side route
-handlers to create sessions, refresh tokens, and download uploaded files.
+This project is a Next.js App Router example for integrating ScanUpload into a
+web app. The browser creates ScanUpload sessions and connects to the hub
+directly with SignalR. It has no ScanUpload server API routes and does not
+require a client secret.
 
 ## Requirements
 
 - Node.js 20 or newer
 - npm
-- A ScanUpload client ID and client secret from https://app.scanupload.net
+- A ScanUpload client ID from https://app.scanupload.net/dashboard
 
 ## 1. Install dependencies
 
@@ -20,7 +21,7 @@ npm install
 
 ## 2. Create your local environment file
 
-This project uses server-side environment variables for ScanUpload credentials.
+This project uses browser-visible configuration for the ScanUpload hub.
 
 1. Copy `.env.example` to `.env.local`
 2. Open `.env.local`
@@ -29,14 +30,14 @@ This project uses server-side environment variables for ScanUpload credentials.
 Example:
 
 ```dotenv
-SCANUPLOAD_CLIENT_ID=your-client-id
-SCANUPLOAD_CLIENT_SECRET=your-client-secret
+NEXT_PUBLIC_SESSION_URL=https://hub.scanupload.net/api/v2/front-end/session
+NEXT_PUBLIC_CLIENT_ID=your-tenant-id
 ```
 
 You can get these values from https://app.scanupload.net.
 
-The project also supports optional non-secret overrides in `.env.local`, but in
-most cases you do not need to change them.
+`NEXT_PUBLIC_SESSION_URL` is the direct ScanUpload hub endpoint used by the
+widget. Do not put a client secret in a `NEXT_PUBLIC_*` variable.
 
 ## 3. Start the development server
 
@@ -46,30 +47,48 @@ Run:
 npm run dev
 ```
 
-Next.js will start the app locally at:
+Next.js will start the app locally over HTTPS at:
 
 ```text
-http://localhost:3000
+https://localhost:3000
 ```
 
 ## 4. Use the app
 
-1. Open http://localhost:3000 in your browser.
+1. Open https://localhost:3000 in your browser.
 2. Confirm the QR code loads.
 3. Scan the QR code with your phone.
 4. Upload one or more files from the phone.
-5. Use the Download Files button in the app to download the uploaded files.
+
+Next.js generates a self-signed certificate for local development. On first
+visit, use your browser's advanced option to proceed to localhost.
 
 ## Environment variables
 
 These are the main variables used by the app:
 
 ```dotenv
-SCANUPLOAD_CLIENT_ID=your-client-id
-SCANUPLOAD_CLIENT_SECRET=your-client-secret
+NEXT_PUBLIC_SESSION_URL=https://hub.scanupload.net/api/v2/front-end/session
+NEXT_PUBLIC_CLIENT_ID=your-tenant-id
 ```
 
-Optional overrides are already documented in [.env.example](.env.example).
+The client ID is public and used to scope requests; a client secret is for
+server-side integrations and is intentionally not used in this demo.
+
+## Local origins
+
+For localhost development, enable **Test Mode** in the client configuration at
+https://app.scanupload.net/dashboard. Before production deployment, disable
+Test Mode and add the exact public origin, including scheme and port, to the
+client's allowed origins.
+
+HTTPS is required because the widget establishes a secure SignalR WebSocket.
+If your deployment sets a Content Security Policy, allow the hub in
+`connect-src`:
+
+```text
+connect-src 'self' https://hub.scanupload.net wss://hub.scanupload.net;
+```
 
 ## Available scripts
 
@@ -85,10 +104,11 @@ npm run start
 
 ## Deploying to Vercel
 
-If you deploy this project to Vercel, add the same environment variables in the
-Vercel project settings:
+If you deploy this project to Vercel, add these values in the Vercel project
+settings and rebuild the deployment:
 
-- `SCANUPLOAD_CLIENT_ID`
-- `SCANUPLOAD_CLIENT_SECRET`
+- `NEXT_PUBLIC_SESSION_URL`
+- `NEXT_PUBLIC_CLIENT_ID`
 
-Do not commit real secrets to the repository.
+Register the Vercel application's exact public origin in ScanUpload before
+using the production deployment.

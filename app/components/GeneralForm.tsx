@@ -4,66 +4,32 @@ import React, { useState } from 'react';
 import { QrCodeGenerator } from '@scanupload/qr-code-generator-react';
 import '@scanupload/qr-code-generator-react/dist/index.css';
 
+function readSessionUrl(): string {
+  const value = process.env.NEXT_PUBLIC_SESSION_URL;
+  if (!value) {
+    throw new Error(
+      'NEXT_PUBLIC_SESSION_URL is not set. Copy .env.example to .env.local and configure ScanUpload.'
+    );
+  }
+  return value;
+}
+
+const sessionUrl = readSessionUrl();
+const clientId = process.env.NEXT_PUBLIC_CLIENT_ID;
+
 export default function GeneralForm() {
   const [showQrCodeLogo, setShowQrCodeLogo] = useState(true);
   const [clickQrcodeReload, setClickQrcodeReload] = useState(true);
   const [showHeader, setShowHeader] = useState(true);
+  const [showDownloadButton, setShowDownloadButton] = useState(true);
   const [filePreviewMode, setFilePreviewMode] = useState<'list' | 'grid'>('list');
   const [headerText, setHeaderText] = useState('Scan to upload');
   const [qrCodeSize, setQrCodeSize] = useState<'small' | 'medium' | 'large' | 'xlarge'>('large');
-  const [downloading, setDownloading] = useState(false);
-  const [downloadError, setDownloadError] = useState<string | null>(null);
-
-  const handleDownload = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setDownloadError(null);
-
-    const raw = localStorage.getItem('qrcode-last-session-ids');
-    const sessionId: string | null = raw ? (JSON.parse(raw) as string[])[0] ?? null : null;
-    if (!sessionId) {
-      setDownloadError('No active session found. Please scan the QR code first.');
-      return;
-    }
-
-    setDownloading(true);
-    try {
-      const response = await fetch(`/api/download-file/${encodeURIComponent(sessionId)}`);
-      if (!response.ok) {
-        const json = await response.json().catch(() => ({}));
-        setDownloadError((json as { error?: string }).error ?? 'Download failed.');
-        return;
-      }
-
-      const disposition = response.headers.get('Content-Disposition');
-      let fileName = `${sessionId}.zip`;
-      if (disposition) {
-        const match =
-          disposition.match(/filename\*=UTF-8''([^;]+)/i) ||
-          disposition.match(/filename="?([^";]+)"?/i);
-        if (match) fileName = decodeURIComponent(match[1]);
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.download = fileName;
-      anchor.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      setDownloadError('Download failed. Please try again.');
-    } finally {
-      setDownloading(false);
-    }
-  };
 
   return (
     <div className="bg-gray-100">
       <div className="flex items-center justify-center min-h-screen min-w-screen">
-        <form
-          onSubmit={handleDownload}
-          className="bg-white shadow-lg rounded-lg p-8 max-w-md"
-        >
+        <div className="bg-white shadow-lg rounded-lg p-8 max-w-md">
           <h2 className="text-2xl font-bold text-center mb-2">Example Form</h2>
 
           <div className="mb-6">
@@ -119,6 +85,22 @@ export default function GeneralForm() {
                   className="text-sm font-medium text-gray-700 select-none cursor-pointer w-25 text-left"
                 >
                   Show header
+                </label>
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  id="checkDownloadButton"
+                  type="checkbox"
+                  checked={showDownloadButton}
+                  onChange={() => setShowDownloadButton(!showDownloadButton)}
+                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 mr-2"
+                />
+                <label
+                  htmlFor="checkDownloadButton"
+                  className="text-sm font-medium text-gray-700 select-none cursor-pointer w-40 text-left"
+                >
+                  Show download button
                 </label>
               </div>
 
@@ -205,29 +187,17 @@ export default function GeneralForm() {
           {/* QR Code component */}
           <div className="mb-6">
             <QrCodeGenerator
-              sessionUrl="/scanupload-api/session"
-              refreshTokenUrl="/scanupload-api/token"
+              sessionUrl={sessionUrl}
+              clientId={clientId}
               showHeader={showHeader}
               header={headerText}
               size={qrCodeSize}
               showLogo={showQrCodeLogo}
               clickQrCodeToReload={clickQrcodeReload}
               filePreviewMode={filePreviewMode}
+              showDownloadButton={showDownloadButton}
             />
           </div>
-
-          {/* Download button */}
-          <button
-            type="submit"
-            disabled={downloading}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {downloading ? 'Downloading...' : 'Download Files'}
-          </button>
-
-          {downloadError && (
-            <p className="mt-2 text-sm text-center text-red-600">{downloadError}</p>
-          )}
 
           <p className="mt-4 text-center text-sm">
             <a
@@ -249,7 +219,7 @@ export default function GeneralForm() {
               source code on GitHub
             </a>
           </p>
-        </form>
+        </div>
       </div>
     </div>
   );
