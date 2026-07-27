@@ -71,6 +71,7 @@ These are the main variables used by the app:
 
 ```dotenv
 NEXT_PUBLIC_SESSION_URL=/hub-api/api/v2/front-end/session
+NEXT_PUBLIC_HUB_API_TARGET=https://hub.scanupload.net
 NEXT_PUBLIC_CLIENT_ID=your-tenant-id
 ```
 
@@ -111,6 +112,7 @@ settings and rebuild the deployment:
 
 - `NEXT_PUBLIC_SESSION_URL`
 - `NEXT_PUBLIC_CLIENT_ID`
+- `NEXT_PUBLIC_HUB_API_TARGET`
 
 Register the Vercel application's exact public origin in ScanUpload before
 using the production deployment. For example:

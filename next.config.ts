@@ -1,12 +1,14 @@
 import type { NextConfig } from 'next';
 
+const hubApiTarget = process.env.NEXT_PUBLIC_HUB_API_TARGET ?? 'https://hub.scanupload.net';
+
 const nextConfig: NextConfig = {
     transpilePackages: ['@scanupload/qr-code-generator-react', '@scanupload/qr-code-generator-core'],
     async rewrites() {
         return [
             {
                 source: '/hub-api/:path*',
-                destination: 'https://hub.scanupload.net/:path*'
+                destination: `${hubApiTarget}/:path*`
             }
         ];
     },
