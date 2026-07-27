@@ -1,9 +1,9 @@
 # ScanUpload Next.js Example
 
 This project is a Next.js App Router example for integrating ScanUpload into a
-web app. The browser creates ScanUpload sessions and connects to the hub
-directly with SignalR. It has no ScanUpload server API routes and does not
-require a client secret.
+web app. The browser creates ScanUpload sessions through a same-origin
+`/hub-api` rewrite and connects to the hub with SignalR. It has no ScanUpload
+server API routes and does not require a client secret.
 
 ## Requirements
 
@@ -30,14 +30,16 @@ This project uses browser-visible configuration for the ScanUpload hub.
 Example:
 
 ```dotenv
-NEXT_PUBLIC_SESSION_URL=https://hub.scanupload.net/api/v2/front-end/session
+NEXT_PUBLIC_SESSION_URL=/hub-api/api/v2/front-end/session
 NEXT_PUBLIC_CLIENT_ID=your-tenant-id
 ```
 
 You can get these values from https://app.scanupload.net.
 
-`NEXT_PUBLIC_SESSION_URL` is the direct ScanUpload hub endpoint used by the
-widget. Do not put a client secret in a `NEXT_PUBLIC_*` variable.
+`NEXT_PUBLIC_SESSION_URL` is the browser-visible session route. The fixed
+rewrite in `next.config.ts` forwards `/hub-api/*` to
+`https://hub.scanupload.net/*`, avoiding a cross-origin session request. Do
+not put a client secret in a `NEXT_PUBLIC_*` variable.
 
 ## 3. Start the development server
 
@@ -68,7 +70,7 @@ visit, use your browser's advanced option to proceed to localhost.
 These are the main variables used by the app:
 
 ```dotenv
-NEXT_PUBLIC_SESSION_URL=https://hub.scanupload.net/api/v2/front-end/session
+NEXT_PUBLIC_SESSION_URL=/hub-api/api/v2/front-end/session
 NEXT_PUBLIC_CLIENT_ID=your-tenant-id
 ```
 
@@ -111,4 +113,11 @@ settings and rebuild the deployment:
 - `NEXT_PUBLIC_CLIENT_ID`
 
 Register the Vercel application's exact public origin in ScanUpload before
-using the production deployment.
+using the production deployment. For example:
+
+```text
+https://scanupload-example-vercel.vercel.app
+```
+
+After deployment, the session request in browser DevTools should be a POST to
+`https://scanupload-example-vercel.vercel.app/hub-api/api/v2/front-end/session`.
